@@ -21,18 +21,30 @@ struct func_traits<R(*)(Arg...)>
 
 
 
+// template<typename FN>
+// void detect(FN f)
+// {
+//     //typedef typename std::enable_if<std::is_function<FN>::value,int>::type itype;
+//     typedef func_traits<FN> fn;
+//     std::cout
+//         <<typeid(typename fn::result).name()
+//         <<"("<<fn::arity<<")\n";
+// }
 template<typename FN>
 void detect(FN f)
 {
-	typedef typename std::enable_if<std::is_function<FN>::value,int>::type itype;
     typedef func_traits<FN> fn;
-    std::cout
-     	<<typeid(typename fn::result).name()
-    	<<"("<<fn::arity<<")\n";
-
+    std::cout<<typeid(typename fn::result).name()<<"(";
+    if(fn::arity > 0)
+        std::cout<<typeid(typename fn::template arg<0>::type).name();
+    if(fn::arity > 1)
+        std::cout<<", "<<typeid(typename fn::template arg<1>::type).name();
+  //   if(fn::arity > 2)
+        // std::cout<<", "<<typeid(typename fn::template arg<2>::type).name();
+    std::cout<<")\n";
 }
 
-int fn(int,long) {}
+double fn(int,long) {}
 
 
 int main()

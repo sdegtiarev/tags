@@ -8,32 +8,32 @@ struct lambda_traits
 : public lambda_traits<decltype(&T::operator())>
 {};
 
-template <typename ClassType, typename ReturnType, typename...Args>
-struct lambda_traits<ReturnType(ClassType::*)(Args...) const>
+template <typename C, typename R, typename...Args>
+struct lambda_traits<R(C::*)(Args...) const>
 {
     enum { arity = sizeof...(Args) };
 
-    typedef ReturnType result;
+    using result=R;
     template <size_t i> struct arg {
-        typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;
+        using type=typename std::tuple_element<i, std::tuple<Args...>>::type;
     };
 };
 
 template <typename T> struct function_traits;
 
-template <typename ReturnType, typename...Args>
-struct function_traits<ReturnType(*)(Args...)>
+template <typename R, typename...Args>
+struct function_traits<R(*)(Args...)>
 {
     enum { arity = sizeof...(Args) };
 
-    typedef ReturnType result;
+    using result=R;
     template <size_t i> struct arg {
-        typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;
+        using type=typename std::tuple_element<i, std::tuple<Args...>>::type;
     };
 };
 
 
-//template<typename T, bool =std::is_function<T>::value> struct func_traits;
+template<typename T, bool =std::is_function<typename std::remove_pointer<T>::type>::value> struct func_traits;
 
 template<typename R, typename...Arg>
 struct func_traits<R(*)(Arg...),true> : function_traits<R(*)(Arg...)>
@@ -46,13 +46,18 @@ struct func_traits<T,false> : lambda_traits<T>
 
 
 
+
 template<typename FN>
 void detect(FN f)
 {
-    typedef func_traits<FN> fn;
+    using fn=func_traits<FN>;
     std::cout
      	<<typeid(typename fn::result).name()
-    	<<"("<<fn::arity<<")\n";
+    	<<"{"<<fn::arity<<"} ("
+        <<typeid(typename fn::template arg<0>::type).name()
+        <<", "
+        <<typeid(typename fn::template arg<1>::type).name()
+        <<")\n";
 
 }
 
@@ -61,13 +66,7 @@ int fn(int,long) {}
 
 int main()
 {
-	int x,y;
-    auto lambda = [x,&y](int i,int) { return long(i*10); };
-    typedef lambda_traits<decltype(fn)> traits;
-
-
-
-    detect(lambda);
+    detect([](int i,char) { return long(); });
 	detect(fn);
 
     return 0;
